@@ -7,24 +7,25 @@ type NotificationPayload = {
   data?: Record<string, string>;
 };
 
+// Parse the single JSON credential stored in GOOGLE_CREDENTIALS
+function getCredentials() {
+  const raw = process.env.GOOGLE_CREDENTIALS;
+  if (!raw) throw new Error("Missing GOOGLE_CREDENTIALS env");
+
+  return JSON.parse(raw);
+}
+
 async function sendNotification({
   token,
   title,
   body,
   data,
 }: NotificationPayload) {
-  // Log FCM endpoint and credentials for debugging
-  const urel = `https://fcm.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/messages:send`;
-  console.log("FCM URL:", urel);
-  console.log("Client email:", process.env.FIREBASE_CLIENT_EMAIL);
-  console.log("Project ID:", process.env.FIREBASE_PROJECT_ID);
+  const credentials = getCredentials();
 
   // Prepare Google Auth client that can request access tokens for FCM
   const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
+    credentials,
     scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
   });
   // Give client capability to request access tokens
